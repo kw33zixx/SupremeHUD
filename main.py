@@ -31,7 +31,13 @@ from hud import Ui_MainWindow as hudUI
 from mainwindow import Ui_MainWindow as mainUI
 from fetch import parse
 
-CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
+def get_app_dir():
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
+
+CONFIG_PATH = os.path.join(get_app_dir(), "config.json")
+VALUES_PATH = os.path.join(get_app_dir(), "mm2_values.json")
 
 SLOT_WIDTH = 70
 SLOT_BOX_HEIGHT = 90
@@ -54,9 +60,8 @@ class ValuesDatabase:
         self._load()
 
     def _load(self):
-        path = os.path.join(os.path.dirname(__file__), "mm2_values.json")
-        if os.path.exists(path):
-            with open(path, "r", encoding="utf-8") as f:
+        if os.path.exists(VALUES_PATH):
+            with open(VALUES_PATH, "r", encoding="utf-8") as f:
                 self.items = json.load(f)
             self.by_name = {item["name"]: item for item in self.items}
 
@@ -871,6 +876,7 @@ class MainWindow(QMainWindow, mainUI):
 
     def _on_update_err(self, msg):
         self.lastupdate.setText(f"Error: {msg}")
+        print(msg)
         self.update.setText("Update values")
         self.update.setEnabled(True)
 

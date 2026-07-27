@@ -1,3 +1,4 @@
+import selenium.webdriver.chrome.webdriver
 import time
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -5,6 +6,12 @@ from selenium.webdriver.chrome.options import Options
 from selenium_stealth import stealth
 import os
 import json
+import sys
+
+def get_app_dir():
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
 
 
 def get_driver():
@@ -139,7 +146,7 @@ def parse():
         driver.quit()
 
     if all_items:
-        output_path = os.path.join(os.path.dirname(__file__), "mm2_values.json")
+        output_path = os.path.join(get_app_dir(), "mm2_values.json")
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(all_items, f, ensure_ascii=False, indent=2)
         print(f"\nsaved {len(all_items)} items to {output_path}")
