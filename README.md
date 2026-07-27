@@ -29,6 +29,13 @@
 
 </details>
 
+## ⚠️ Warning
+> If you use custom fonts (e.g., via **Bloxstrap**), I strongly recommend reverting to the **default Roblox font**.
+>
+> Non-standard, cursive, or fancy fonts will cause item names and quantities to fail OCR detection. 
+
+*If you must use a custom font, at least ensure it's clean and readable!*
+
 ## <a id="feat"></a> ✨ Features
 - **Auto-screen scanning:** Uses OCR (Tesseract) and OpenCV to recognize item names and quantities (`x2`, `x3`, etc.).
 - **Loads Current Prices:** Parses data from [Supreme Values](https://supremevalues.com/).
