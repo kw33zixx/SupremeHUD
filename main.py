@@ -19,7 +19,7 @@ from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QGraphicsOpacityEffect,
     QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QInputDialog
 )
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer, QRect, QPoint
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer, QRect, QPoint, QMutex
 from PyQt5.QtGui import QPainter, QPen, QColor, QCursor
 
 from PIL import ImageGrab
@@ -221,6 +221,32 @@ class TradeSlot(QWidget):
         self.slot_box.show_debug_borders = visible
         self.slot_box.update()
 
+    def prompt_subregion_input(self, region_name):
+        # Only allow manual correction while in edit mode (debug borders on).
+        # Outside edit mode this used to be called with no method defined at
+        # all, which raised AttributeError on every click and crashed the app.
+        if not self.slot_box.show_debug_borders:
+            return
+
+        if region_name == "quantity":
+            value, ok = QInputDialog.getInt(
+                self, "Set quantity", "Quantity:", value=self.qty, min=1, max=999
+            )
+            if ok:
+                self.set_item(self.base_name, self.is_chroma, value, force=True)
+            return
+
+        if region_name == "chroma":
+            self.set_item(self.base_name, not self.is_chroma, self.qty, force=True)
+            return
+
+        # "name" (default/fallback region)
+        text, ok = QInputDialog.getText(
+            self, "Set item name", "Item name:", text=self.base_name
+        )
+        if ok and text.strip():
+            self.set_item(text, self.is_chroma, self.qty, force=True)
+
     def set_item(self, name, is_chroma=False, qty=1, force=False):
         clean_name = name.strip() if name else ""
         if not clean_name:
@@ -360,7 +386,7 @@ class TradeScannerThread(QThread):
         while self.running:
             start_time = time.time()
 
-            rects = self.hud_window.get_slot_global_rects()
+            rects = self.hud_window.get_latest_rects()
 
             for slot_key, ((x1, y1), (x2, y2)) in rects.items():
                 if x2 <= x1 or y2 <= y1:
@@ -520,6 +546,37 @@ class HUDWindow(QMainWindow, hudUI):
         self.hover_timer = QTimer(self)
         self.hover_timer.timeout.connect(self.check_global_mouse_hover)
         self.hover_timer.start(30)
+
+        # --- thread-safe rects handoff for TradeScannerThread ---
+        # get_slot_global_rects() touches real QWidgets (mapToGlobal etc.),
+        # which is only safe from the GUI thread. Instead of letting the
+        # worker thread call it directly, we recompute the rects here on a
+        # timer (main thread) and publish a plain-int snapshot behind a
+        # QMutex. The worker thread only ever reads the snapshot.
+        self._rects_mutex = QMutex()
+        self._rects_snapshot = {}
+
+        self.rects_timer = QTimer(self)
+        self.rects_timer.timeout.connect(self._publish_rects)
+        self.rects_timer.start(50)
+        self._publish_rects()
+
+    def _publish_rects(self):
+        rects = self.get_slot_global_rects()
+        self._rects_mutex.lock()
+        try:
+            self._rects_snapshot = rects
+        finally:
+            self._rects_mutex.unlock()
+
+    def get_latest_rects(self):
+        """Thread-safe accessor for TradeScannerThread. Returns a plain
+        dict of ints only — no QWidget access, safe to call from any thread."""
+        self._rects_mutex.lock()
+        try:
+            return dict(self._rects_snapshot)
+        finally:
+            self._rects_mutex.unlock()
 
     def _replace_slots(self):
         while self.youritems.count():
