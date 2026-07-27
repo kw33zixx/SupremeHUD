@@ -4,6 +4,7 @@
 
 # SupremeHUD
 ### An automatic overlay calculator and item scanner for Murder Mystery 2 (Roblox).
+###### *Made with the AI assistance btw 🥀*
 
 <h4>
     <a href="https://i.pinimg.com/236x/b3/a3/fd/b3a3fd01ee45fc0717544383309e5eef.jpg">these things</a>
