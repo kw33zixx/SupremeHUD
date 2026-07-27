@@ -1,0 +1,9 @@
+beautifulsoup4==4.15.0
+numpy==2.5.1
+opencv_python==4.13.0.92
+Pillow==12.3.0
+PyQt5==5.15.11
+pyqt5_sip==12.18.0
+pytesseract==0.3.13
+selenium==4.46.0
+selenium_stealth==1.0.6
