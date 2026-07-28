@@ -42,6 +42,11 @@
 - **Loads Current Prices:** Parses data from [Supreme Values](https://supremevalues.com/).
 - **Interactive HUD:** Fully transparent overlay, tooltips on hover, and the ability to manually adjust slots.
 
+## <a id="todo"></a> 📜 TODO
+
+- [ ] add logging
+- [x] pet my kitty
+
 ## <a id="inst"></a> 💾 Installation & Setup
 - **SupremeHUD** requires **Tesseract** to work.
 
